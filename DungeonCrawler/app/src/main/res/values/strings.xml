@@ -6,4 +6,8 @@
     <string name="up_arrow">↑</string>
     <string name="hp">HP</string>
     <string name="xp">XP</string>
+    <string name="attack">Attack</string>
+    <string name="potions">Use Potions</string>
+    <string name="flee">Flee</string>
+    <string name="you_healed">You healed</string>
 </resources>

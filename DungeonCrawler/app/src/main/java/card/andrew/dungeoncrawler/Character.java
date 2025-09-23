@@ -69,6 +69,10 @@ public class Character {
         this.maxHealth = this.level * 10;
         this.minAttack = this.level * 2;
         this.maxAttack = this.level * 3;
-        this.xp = (int) Math.pow(2, this.level - 1) * 25;
+        this.xp = (int) Math.pow(2, this.level - 1) * 5;
+    }
+
+    public CharSequence getLevel() {
+        return String.valueOf(level);
     }
 }
