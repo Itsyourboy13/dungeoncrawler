@@ -1,6 +1,7 @@
 package card.andrew.dungeoncrawler;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -25,7 +26,6 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
     private Monster engagingMonster = null;
     private boolean levelFinished = false;
     private int timesPlayed = 1;
-    private Battle battle = null;
     private String gameMessage = "";
     private int messageCounter = 0;
     private boolean playerMoved = false; // Track player movement
@@ -36,14 +36,14 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
     private float tileSize = 1.0f;
 
     // Paints
-    private Paint lightGrayPaint = new Paint();
-    private Paint darkGrayPaint = new Paint();
-    private Paint blackPaint = new Paint();
-    private Paint greenPaint = new Paint();
-    private Paint yellowPaint = new Paint();
-    private Paint bluePaint = new Paint();
-    private Paint redPaint = new Paint();
-    private Paint textPaint = new Paint();
+    private final Paint lightGrayPaint = new Paint();
+    private final Paint darkGrayPaint = new Paint();
+    private final Paint blackPaint = new Paint();
+    private final Paint greenPaint = new Paint();
+    private final Paint yellowPaint = new Paint();
+    private final Paint bluePaint = new Paint();
+    private final Paint redPaint = new Paint();
+    private final Paint textPaint = new Paint();
 
     private float scaleX, scaleY;
     private float screenWidth, screenHeight;
@@ -191,17 +191,7 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
     }
 
     private void update() {
-        if (battleInProgress && battle != null) {
-            battle.update(); // Handle blink/message timers
-            if (!battle.isBlinking() && !GameView.isBattleInProgress()) {
-                battle = null;
-                // Check for game over
-                if (player.getHealth() <= 0) {
-                    gameMessage = "GAME OVER! YOU LOST!";
-                    messageCounter = 100; // ~2s
-                }
-            }
-        } else if (!levelFinished) {
+        if (!levelFinished) {
             dungeon.updateSeenRooms(player);
             monsters.removeIf(m -> m.getHealth() <= 0);
             if (monsters.isEmpty()) {
@@ -215,8 +205,9 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
                     if (monster.getX() == player.getX() && monster.getY() == player.getY() && !battleInProgress) {
                         battleInProgress = true;
                         engagingMonster = monster;
-                        battle = new Battle(player, monster, dungeon);
-                        monster.startBattle();
+                        GameState.getInstance().setCurrentMonster(monster);
+                        GameState.getInstance().setPlayer(player);
+                        startBattleActivity();
                     }
                 }
                 playerMoved = false; // Reset after movement
@@ -233,41 +224,33 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
             }
         }
     }
-
-    public static void setBattleInProgress(boolean inProgress) {
-        battleInProgress = inProgress;
-    }
-
-    public static boolean isBattleInProgress() {
-        return battleInProgress;
+    private void startBattleActivity() {
+        Intent intent = new Intent(getContext(), BattleActivity.class);
+        ((MainActivity) getContext()).startBattle(intent);
     }
 
     public void draw(Canvas canvas) {
         super.draw(canvas);
         canvas.drawColor(Color.BLACK);
 
-        if (battleInProgress && battle != null) {
-            battle.drawBattleScreen(canvas, bluePaint, redPaint, greenPaint, blackPaint, textPaint);
-        } else {
-            canvas.save();
-            // Apply camera translation and scale
-            canvas.translate(screenWidth / 2 - (player.getX() + 0.5f) * tileSize - cameraX,
-                    screenHeight / 2 - (player.getY() + 0.5f) * tileSize - cameraY);
-            canvas.scale(tileSize, tileSize); // Apply tile size (for zoom later)
+        canvas.save();
+        // Apply camera translation and scale
+        canvas.translate(screenWidth / 2 - (player.getX() + 0.5f) * tileSize - cameraX,
+                screenHeight / 2 - (player.getY() + 0.5f) * tileSize - cameraY);
+        canvas.scale(tileSize, tileSize); // Apply tile size (for zoom later)
 
-            dungeon.draw(canvas, lightGrayPaint, darkGrayPaint, blackPaint);
-            player.draw(canvas);
-            for (Monster monster : monsters) {
-                monster.draw(canvas);
-            }
+        dungeon.draw(canvas, lightGrayPaint, darkGrayPaint, blackPaint);
+        player.draw(canvas);
+        for (Monster monster : monsters) {
+            monster.draw(canvas);
+        }
 
-            canvas.restore(); // Reset for UI elements
+        canvas.restore(); // Reset for UI elements
 
-            if (!gameMessage.isEmpty()) {
-                textPaint.setTextSize(60);
-                canvas.drawText(gameMessage, screenWidth / 2, screenHeight / 2, textPaint);
-                textPaint.setTextSize(30);
-            }
+        if (!gameMessage.isEmpty()) {
+            textPaint.setTextSize(60);
+            canvas.drawText(gameMessage, screenWidth / 2, screenHeight / 2, textPaint);
+            textPaint.setTextSize(30);
         }
 
         if (!gameMessage.isEmpty()) {
@@ -281,26 +264,6 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
         // Center player (adjust for zoom later)
         cameraX = 0; // Optional fine-tuning for offsets
         cameraY = 0;
-    }
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        if (battleInProgress && battle != null) {
-            // Handle battle taps (unchanged)
-            if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                float battleTouchX = event.getX() * 30f / screenWidth;
-                float battleTouchY = event.getY() * 30f / screenHeight;
-                if (battleTouchX >= 13 && battleTouchX <= 17 && battleTouchY >= 4.5 && battleTouchY <= 5.5) {
-                    battle.playerFlee();
-                } else if (battleTouchX >= 13 && battleTouchX <= 17 && battleTouchY >= 2.5 && battleTouchY <= 3.5) {
-                    battle.playerAttack();
-                } else if (battleTouchX >= 8 && battleTouchX <= 12 && battleTouchY >= 3.5 && battleTouchY <= 5.5) {
-                    battle.playerUsePotion();
-                }
-                return true;
-            }
-        }
-        return super.onTouchEvent(event); // No swipes/taps for movement; buttons handle it
     }
 
     // Called from MainActivity button listeners
@@ -319,6 +282,14 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
         running = true;
         gameThread = new Thread(this);
         gameThread.start();
+    }
+
+    public void onBattleResult(boolean enemyDefeated) {
+        if (enemyDefeated) {
+            monsters.remove(engagingMonster);
+        }
+        battleInProgress = false;
+        engagingMonster = null;
     }
 
     // Getters for progress bars

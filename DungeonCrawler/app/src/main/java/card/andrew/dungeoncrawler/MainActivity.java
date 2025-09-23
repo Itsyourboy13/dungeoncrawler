@@ -1,12 +1,16 @@
 package card.andrew.dungeoncrawler;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -18,6 +22,7 @@ public class MainActivity extends AppCompatActivity {
     private ProgressBar xpProgressBar;
     private TextView hpText;
     private TextView xpText;
+    private ActivityResultLauncher<Intent> battleResult;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,6 +33,26 @@ public class MainActivity extends AppCompatActivity {
         xpProgressBar = findViewById(R.id.xpProgressBar);
         hpText = findViewById(R.id.hpText);
         xpText = findViewById(R.id.xpText);
+
+        // Initialize battle result launcher
+        battleResult = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK) {
+                        Intent data = result.getData();
+                        if (data != null) {
+                            boolean enemyDefeated = data.getBooleanExtra("enemyDefeated", false);
+                            gameView.onBattleResult(enemyDefeated);
+                            updateProgressBars();
+                            Toast.makeText(this, enemyDefeated ? "Enemy defeated!" : "Battle ended", Toast.LENGTH_SHORT).show();
+                        }
+                    } else if (result.getResultCode() == RESULT_CANCELED) {
+                        gameView.onBattleResult(false); // Battle fled or interrupted
+                        updateProgressBars();
+                        Toast.makeText(this, "Battle fled", Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
 
         // Initial update of progress bars
         gameView.post(this::updateProgressBars);
@@ -52,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
             int playerXpNeeded = gameView.getPlayerXpNeeded();
             String hpMessage = "Health: " + playerHealth + "/" + playerMaxHealth;
             String xpMessage = "XP: " + playerXp + "/" + playerXpNeeded;
+            Log.d("MainActivity", "HP: " + playerHealth + ", XP: " + playerXp);
             hpText.setText(hpMessage);
             xpText.setText(xpMessage);
             hpProgressBar.setMax(playerMaxHealth);
@@ -59,6 +85,10 @@ public class MainActivity extends AppCompatActivity {
             xpProgressBar.setMax(playerXpNeeded);
             xpProgressBar.setProgress(playerXp);
         }
+    }
+
+    public void startBattle(Intent intent) {
+        battleResult.launch(intent);
     }
 
     @Override

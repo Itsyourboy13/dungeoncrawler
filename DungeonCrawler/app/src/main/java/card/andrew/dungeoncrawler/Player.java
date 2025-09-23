@@ -4,12 +4,12 @@ import java.util.Random;
 
 public class Player extends Character {
     private int xpNeeded, potions;
-    private int xp = 0;
     private static int level = 1;
     private static final Random random = new Random(); // Consistent with Character
 
     public Player(int dungeonWidth, int dungeonHeight) {
         super(dungeonWidth, dungeonHeight, level);
+        this.xp = 0;
         this.potions = 3;
         // Override paint to ensure blue color (optional, as Character already sets blue)
         characterPaint.setColor(0xFF0000FF); // Blue
@@ -28,13 +28,10 @@ public class Player extends Character {
         return xpNeeded;
     }
 
-    public int getXp() {
-        return xp;
-    }
-
     public void addXP(int xp) {
         this.xp += xp;
         if (this.xp >= xpNeeded) {
+            this.xp -= xpNeeded;
             levelUp();
         }
     }

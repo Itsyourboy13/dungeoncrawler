@@ -81,9 +81,4 @@ public class Monster extends Character {
         }
         moveCounter++;
     }
-
-    public void startBattle() {
-        // Simply set battle flag; GameView handles rendering and input
-        GameView.setBattleInProgress(true);
-    }
 }
