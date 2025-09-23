@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Dungeon Crawler</string>
+    <string name="left_arrow">←</string>
+    <string name="down_arrow">↓</string>
+    <string name="right_arrow">→</string>
+    <string name="up_arrow">↑</string>
+    <string name="hp">HP</string>
+    <string name="xp">XP</string>
+</resources>
