@@ -2,6 +2,8 @@
 <resources>
     <string-array name="filter_options">
         <item>All</item>
+        <item>Local</item>
+        <item>Name</item>
         <item>Today</item>
         <item>This week</item>
         <item>This month</item>

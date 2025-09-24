@@ -7,6 +7,8 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,17 +17,21 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
 
 import card.andrew.dungeoncrawler.R;
 
-public class LeaderboardFragment extends Fragment {
+public class LeaderboardFragment extends Fragment
+        implements NameFilterFragment.NameFilterListener{
 
     private LeaderboardViewModel mViewModel;
-    private ListView leaderboardList;
+    private RecyclerView leaderboardRecycler;
     private Spinner filterSpinner;
+    private LeaderboardAdapter adapter;
+    private TextView title;
 
     public static LeaderboardFragment newInstance() {
         return new LeaderboardFragment();
@@ -35,7 +41,7 @@ public class LeaderboardFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_leaderboard, container, false);
-        leaderboardList = view.findViewById(R.id.leaderboard_list);
+        leaderboardRecycler = view.findViewById(R.id.leaderboard_recycler);
         filterSpinner = view.findViewById(R.id.filter_spinner);
         Button applyFilterButton = view.findViewById(R.id.apply_filter_button);
 
@@ -47,6 +53,12 @@ public class LeaderboardFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         mViewModel = new ViewModelProvider(this).get(LeaderboardViewModel.class);
 
+        // Set up RecyclerView
+        leaderboardRecycler.setLayoutManager(new LinearLayoutManager(requireContext()));
+        adapter = new LeaderboardAdapter(new ArrayList<>());
+        adapter.setShowHeader(true);
+        leaderboardRecycler.setAdapter(adapter);
+
         // Set up the filter spinner
         ArrayAdapter<CharSequence> spinnerAdapter = ArrayAdapter.createFromResource(
                 requireContext(),
@@ -56,21 +68,13 @@ public class LeaderboardFragment extends Fragment {
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         filterSpinner.setAdapter(spinnerAdapter);
 
-        // Set up ListView adapter
-        final ArrayAdapter<String> listAdapter = new ArrayAdapter<>(
-                requireContext(),
-                android.R.layout.simple_list_item_1,
-                new ArrayList<>()
-        );
-        leaderboardList.setAdapter(listAdapter);
-
-        // Observe leaderboard entries and update the ListView
+        // Observe leaderboard entries and update the adapter
         mViewModel.getLeaderboardEntries().observe(getViewLifecycleOwner(), entries -> {
-            listAdapter.clear();
-            if (entries != null) {
-                listAdapter.addAll(entries);
+            if (adapter != null) {
+                adapter = new LeaderboardAdapter(entries);
+                adapter.setShowHeader(true);
+                leaderboardRecycler.setAdapter(adapter);
             }
-            listAdapter.notifyDataSetChanged();
         });
 
         // Observe filter and set initial value
@@ -86,8 +90,18 @@ public class LeaderboardFragment extends Fragment {
         Button applyFilterButton = view.findViewById(R.id.apply_filter_button);
         applyFilterButton.setOnClickListener(v -> {
             String selectedFilter = filterSpinner.getSelectedItem().toString();
-            mViewModel.setFilter(selectedFilter);
+            if (selectedFilter.equals("Name")){
+                NameFilterFragment dialog = new NameFilterFragment();
+                dialog.show(getChildFragmentManager(), "name_filter");
+            } else {
+                mViewModel.setFilter(selectedFilter);
+            }
         });
     }
 
+    @Override
+    public void onNameFilterSelected(String name) {
+        mViewModel.setName(name);
+        mViewModel.setFilter("Name");
+    }
 }

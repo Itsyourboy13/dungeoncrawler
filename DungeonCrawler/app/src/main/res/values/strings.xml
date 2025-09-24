@@ -27,4 +27,12 @@
     <string name="select_filter">Select Filter</string>
     <string name="apply_filter">Apply Filter</string>
     <string name="all_time_leaderboard">All Time Leaderboard</string>
+    <string name="player_name">Player Name</string>
+    <string name="level">Level Reached</string>
+    <string name="enemies">Enemies</string>
+    <string name="rank">Rank</string>
+    <string name="player">Player</string>
+    <string name="enemies_killed">Enemies Killed</string>
+    <string name="filter_by_name">Enter Name to Filter By</string>
+    <string name="enter_name">Enter Name</string>
 </resources>
