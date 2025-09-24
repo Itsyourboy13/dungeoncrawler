@@ -10,4 +10,21 @@
     <string name="potions">Use Potions</string>
     <string name="flee">Flee</string>
     <string name="you_healed">You healed</string>
+    <string name="you_won">YOU WON!</string>
+    <string name="next_level">NEXT LEVEL</string>
+    <string name="level_completed">You completed level</string>
+    <string name="you_reached_level">You reached character level</string>
+    <string name="you_won_level">Level Completed!</string>
+    <string name="title_activity_home">HomeActivity</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="click_to_start">CLICK ANYWHERE TO START</string>
+    <string name="title_leaderboard">Leaderboard</string>
+    <string name="start_game">Start Game</string>
+    <string name="highest_score">Highest Score:</string>
+    <string name="recent_score">Recent Score:</string>
+    <string name="select_filter">Select Filter</string>
+    <string name="apply_filter">Apply Filter</string>
+    <string name="all_time_leaderboard">All Time Leaderboard</string>
 </resources>

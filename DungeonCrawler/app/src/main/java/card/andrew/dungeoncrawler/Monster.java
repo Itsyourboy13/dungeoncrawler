@@ -57,7 +57,7 @@ public class Monster extends Character {
      *
      */
     public void move() {
-        if (moveCounter % 5 == 0) {
+        if (moveCounter % 2 == 0) {
             Graph roomGraph = dungeon.getRoomGraph();
             int playerIndex = target.getY() * dungeon.getWidth() + target.getX();
             int monsterIndex = y * dungeon.getWidth() + x;
@@ -65,10 +65,10 @@ public class Monster extends Character {
             if (bfs.hasPathTo(playerIndex)) {
                 Iterable<Integer> path = bfs.pathTo(playerIndex);
                 int distance = 0;
-                for (int node : path) {
+                for (int ignored : path) {
                     distance++;
                 }
-                if (distance <= 10) {
+                if (distance <= 10 || (moveCounter % 8 == 0 && distance >= 15)) {
                     Iterator<Integer> iterator = path.iterator();
                     iterator.next(); // Skip current room
                     if (iterator.hasNext()) {

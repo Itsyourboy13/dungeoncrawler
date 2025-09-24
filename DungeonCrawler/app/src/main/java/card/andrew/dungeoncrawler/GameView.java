@@ -5,10 +5,8 @@ import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.view.GestureDetector;
-import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import java.util.ArrayList;
@@ -25,9 +23,7 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
     private static boolean battleInProgress = false;
     private Monster engagingMonster = null;
     private boolean levelFinished = false;
-    private int timesPlayed = 1;
-    private String gameMessage = "";
-    private int messageCounter = 0;
+    private int currentLevel = 1;
     private boolean playerMoved = false; // Track player movement
     private GestureDetector gestureDetector;
 
@@ -85,7 +81,7 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
 
     private void initializeMonsters() {
         monsters.clear();
-        if (timesPlayed == 1) {
+        if (currentLevel == 1) {
             if (MONSTER_AMOUNT % 2 == 0) {
                 for (int i = 0; i < MONSTER_AMOUNT / 2; i++) {
                     monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, 1));
@@ -105,37 +101,37 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
         } else {
             if (MONSTER_AMOUNT % 3 == 0) {
                 for (int i = 0; i < MONSTER_AMOUNT / 3; i++) {
-                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, timesPlayed - 1));
+                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, currentLevel - 1));
                 }
                 for (int i = 0; i < MONSTER_AMOUNT / 3; i++) {
-                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, timesPlayed));
+                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, currentLevel));
                 }
                 for (int i = 0; i < MONSTER_AMOUNT / 3; i++) {
-                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, timesPlayed + 1));
+                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, currentLevel + 1));
                 }
             } else if (MONSTER_AMOUNT % 3 == 1) {
                 for (int i = 0; i < MONSTER_AMOUNT / 3; i++) {
-                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, timesPlayed - 1));
+                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, currentLevel - 1));
                 }
                 for (int i = 0; i < MONSTER_AMOUNT / 3; i++) {
-                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, timesPlayed));
+                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, currentLevel));
                 }
                 for (int i = 0; i < MONSTER_AMOUNT / 3; i++) {
-                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, timesPlayed + 1));
+                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, currentLevel + 1));
                 }
-                monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, timesPlayed + 1));
+                monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, currentLevel + 1));
             } else {
                 for (int i = 0; i < MONSTER_AMOUNT / 3; i++) {
-                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, timesPlayed - 1));
+                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, currentLevel - 1));
                 }
                 for (int i = 0; i < MONSTER_AMOUNT / 3; i++) {
-                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, timesPlayed));
+                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, currentLevel));
                 }
                 for (int i = 0; i < MONSTER_AMOUNT / 3; i++) {
-                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, timesPlayed + 1));
+                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, currentLevel + 1));
                 }
-                monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, timesPlayed));
-                monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, timesPlayed + 1));
+                monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, currentLevel));
+                monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, currentLevel + 1));
             }
         }
         levelFinished = false;
@@ -196,8 +192,7 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
             monsters.removeIf(m -> m.getHealth() <= 0);
             if (monsters.isEmpty()) {
                 levelFinished = true;
-                gameMessage = "YOU WON!";
-                messageCounter = 100; // ~2s
+                showLevelFinishedDialog();
             }
             if (playerMoved) {
                 for (Monster monster : monsters) {
@@ -212,18 +207,20 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
                 }
                 playerMoved = false; // Reset after movement
             }
-        } else if (messageCounter > 0) {
-            messageCounter--;
-            if (messageCounter == 0 && !gameMessage.equals("GAME OVER! YOU LOST!")) {
-                timesPlayed++;
-                dungeon = new Dungeon(15, 15);
-                initializeMonsters();
-                levelFinished = false;
-                gameMessage = "NEXT LEVEL STARTING...";
-                messageCounter = 50; // ~1s
-            }
+        } else {
+            currentLevel++;
+            dungeon = new Dungeon(15, 15);
+            initializeMonsters();
+            levelFinished = false;
         }
     }
+
+    private void showLevelFinishedDialog() {
+        LevelFinishedFragment fragment = LevelFinishedFragment.
+                newInstance(currentLevel, player.getLevel());
+        fragment.show(((MainActivity) getContext()).getSupportFragmentManager(), "level_finished");
+    }
+
     private void startBattleActivity() {
         Intent intent = new Intent(getContext(), BattleActivity.class);
         ((MainActivity) getContext()).startBattle(intent);
@@ -246,18 +243,6 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
         }
 
         canvas.restore(); // Reset for UI elements
-
-        if (!gameMessage.isEmpty()) {
-            textPaint.setTextSize(60);
-            canvas.drawText(gameMessage, screenWidth / 2, screenHeight / 2, textPaint);
-            textPaint.setTextSize(30);
-        }
-
-        if (!gameMessage.isEmpty()) {
-            textPaint.setTextSize(60);
-            canvas.drawText(gameMessage, screenWidth / 2f / scaleX, screenHeight / 2f / scaleY, textPaint);
-            textPaint.setTextSize(30);
-        }
     }
 
     private void updateCamera() {

@@ -72,7 +72,7 @@ public class Character {
         this.xp = (int) Math.pow(2, this.level - 1) * 5;
     }
 
-    public CharSequence getLevel() {
-        return String.valueOf(level);
+    public int getLevel() {
+        return level;
     }
 }
