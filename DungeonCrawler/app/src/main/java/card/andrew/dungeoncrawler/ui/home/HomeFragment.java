@@ -33,8 +33,14 @@ public class HomeFragment extends Fragment {
         TextView recentScoreText = binding.recentScoreText;
 
         // Observe score data from ViewModel
-        homeViewModel.getHighestScore().observe(getViewLifecycleOwner(), highestScoreText::setText);
-        homeViewModel.getRecentScore().observe(getViewLifecycleOwner(), recentScoreText::setText);
+        homeViewModel.getHighestScore().observe(getViewLifecycleOwner(), highScore -> {
+            String highScoreMessage = "Highest Score: " + highScore;
+            highestScoreText.setText(highScoreMessage);
+        });
+        homeViewModel.getRecentScore().observe(getViewLifecycleOwner(), recentScore -> {
+            String recentScoreMessage = "Recent Score: " + recentScore;
+            recentScoreText.setText(recentScoreMessage);
+        });
 
         // Set start button listener
         startButton.setOnClickListener(v -> {

@@ -17,6 +17,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -44,6 +45,7 @@ public class LeaderboardFragment extends Fragment
         leaderboardRecycler = view.findViewById(R.id.leaderboard_recycler);
         filterSpinner = view.findViewById(R.id.filter_spinner);
         Button applyFilterButton = view.findViewById(R.id.apply_filter_button);
+        title = view.findViewById(R.id.leaderboard_title);
 
         return view;
     }
@@ -83,7 +85,26 @@ public class LeaderboardFragment extends Fragment
             if (position >= 0) {
                 filterSpinner.setSelection(position);
             }
-            Toast.makeText(requireContext(), "Filter: " + filter, Toast.LENGTH_SHORT).show();
+            switch (filter) {
+                case "Name":
+                    title.setText(R.string.leaderboard_title_name);
+                    break;
+                case "All":
+                    title.setText(R.string.leaderboard_title_all);
+                    break;
+                case "Today":
+                    title.setText(R.string.leaderboard_title_today);
+                    break;
+                case "This week":
+                    title.setText(R.string.leaderboard_title_week);
+                    break;
+                case "This month":
+                    title.setText(R.string.leaderboard_title_month);
+                    break;
+                case "This year":
+                    title.setText(R.string.leaderboard_title_year);
+                    break;
+            }
         });
 
         // Apply filter button listener

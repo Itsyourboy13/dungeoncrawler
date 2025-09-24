@@ -293,4 +293,12 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
     public int getPlayerXpNeeded() {
         return player.getXpNeeded();
     }
+
+    public int getCurrentLevel() {
+        return currentLevel;
+    }
+
+    public int getMontersKilled() {
+        return MONSTER_AMOUNT - monsters.size();
+    }
 }

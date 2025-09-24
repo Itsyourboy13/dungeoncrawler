@@ -39,4 +39,10 @@ public interface LeaderboardDao {
 
     @Query("SELECT COUNT(*) FROM leaderboard_entries")
     int countEntries();
+
+    @Query("SELECT topLevel FROM leaderboard_entries WHERE local = 1 ORDER BY topLevel DESC, enemiesKilled DESC, timestamp DESC LIMIT 1")
+    LiveData<Integer> getHighestScore();
+
+    @Query("SELECT topLevel FROM leaderboard_entries WHERE local = 1 ORDER BY timestamp DESC LIMIT 1")
+    LiveData<Integer> getRecentScore();
 }

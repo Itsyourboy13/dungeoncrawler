@@ -16,13 +16,18 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-public class MainActivity extends AppCompatActivity {
+import card.andrew.dungeoncrawler.data.LeaderboardRepository;
+import card.andrew.dungeoncrawler.data.model.LeaderboardEntry;
+
+public class MainActivity extends AppCompatActivity
+        implements GameOverFragment.GameOverListener {
     private GameView gameView;
     private ProgressBar hpProgressBar;
     private ProgressBar xpProgressBar;
     private TextView hpText;
     private TextView xpText;
     private ActivityResultLauncher<Intent> battleResult;
+    private final LeaderboardRepository mRepository = LeaderboardRepository.getInstance(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,9 +52,14 @@ public class MainActivity extends AppCompatActivity {
                             Toast.makeText(this, enemyDefeated ? "Enemy defeated!" : "Battle ended", Toast.LENGTH_SHORT).show();
                         }
                     } else if (result.getResultCode() == RESULT_CANCELED) {
-                        gameView.onBattleResult(false); // Battle fled or interrupted
+                        gameView.onBattleResult(false);
                         updateProgressBars();
-                        Toast.makeText(this, "Battle fled", Toast.LENGTH_SHORT).show();
+                        if (gameView.getPlayerHealth() > 0) {
+                            Toast.makeText(this, "Battle fled", Toast.LENGTH_SHORT).show();
+                        } else {
+                            GameOverFragment gameOverFragment = new GameOverFragment();
+                            gameOverFragment.show(getSupportFragmentManager(), "game_over");
+                        }
                     }
                 }
         );
@@ -101,5 +111,15 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         gameView.resume();
+    }
+
+    @Override
+    public void onLeaderboardEntryEntered(String name) {
+        LeaderboardEntry entry = new LeaderboardEntry(name, gameView.getCurrentLevel(), gameView.getMontersKilled(), true);
+        mRepository.insertEntry(entry);
+        Intent intent = new Intent(this, HomeActivity.class);
+        startActivity(intent);
+        finish();
+        Toast.makeText(this, "Leaderboard entry added", Toast.LENGTH_SHORT).show();
     }
 }

@@ -87,4 +87,12 @@ public class LeaderboardRepository {
             leaderboardDao.insertEntry(entry);
         });
     }
+
+    public LiveData<Integer> getHighestScore() {
+        return leaderboardDao.getHighestScore();
+    }
+
+    public LiveData<Integer> getRecentScore() {
+        return leaderboardDao.getRecentScore();
+    }
 }

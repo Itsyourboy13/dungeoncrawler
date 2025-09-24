@@ -35,4 +35,12 @@
     <string name="enemies_killed">Enemies Killed</string>
     <string name="filter_by_name">Enter Name to Filter By</string>
     <string name="enter_name">Enter Name</string>
+    <string name="leaderboard_title_year">This Years Top Players</string>
+    <string name="leaderboard_title_month">This Months Top Players</string>
+    <string name="leaderboard_title_week">This Weeks Top Players</string>
+    <string name="leaderboard_title_today">Today\'s Top Players</string>
+    <string name="leaderboard_title_all">All Time Top Players</string>
+    <string name="leaderboard_title_name">Your Top Scores</string>
+    <string name="game_over">You Have Died, Game Over!</string>
+    <string name="submit_score">Submit Your Score</string>
 </resources>
