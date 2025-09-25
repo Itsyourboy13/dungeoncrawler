@@ -50,6 +50,8 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<ViewHolder> {
             holder.enemiesKilledText.setText(String.valueOf(entry.enemiesKilled));
             if (position % 2 == 0) {
                 holder.itemView.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), android.R.color.darker_gray));
+            } else {
+                holder.itemView.setBackgroundColor(Color.TRANSPARENT);
             }
         }
     }
