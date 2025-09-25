@@ -3,6 +3,10 @@ package card.andrew.dungeoncrawler;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 
 import androidx.annotation.NonNull;
@@ -17,11 +21,19 @@ public class GameOverFragment extends DialogFragment {
     }
 
     private GameOverListener listener;
+    private EditText editText;
+    private AlertDialog dialog; // Store dialog to access button later
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setCancelable(false); // Prevent dismissal by back button or touch outside (for the fragment itself)
+    }
 
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-        EditText editText = new EditText(requireActivity());
+        editText = new EditText(requireActivity()); // Assign to field
         editText.setHint(R.string.enter_name);
         editText.setSingleLine();
         editText.setSelectAllOnFocus(true);
@@ -29,13 +41,45 @@ public class GameOverFragment extends DialogFragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireActivity());
         builder.setTitle(R.string.game_over);
         builder.setView(editText);
-        builder.setPositiveButton(R.string.submit_score, (dialog, which) -> {
+        builder.setPositiveButton(R.string.submit_score, (dialogInterface, which) -> {
+            // The button click will only happen if it's enabled
             String name = editText.getText().toString();
             if (listener != null) {
                 listener.onLeaderboardEntryEntered(name);
             }
         });
-        return builder.create();
+
+        dialog = builder.create();
+        dialog.setCanceledOnTouchOutside(false); // Specifically prevent dialog dismissal on touch outside
+        // Note: setCancelable(false) on the DialogFragment (in onCreate) also handles this, 
+        // but being explicit on the dialog itself is also fine.
+        return dialog;
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        final Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+        if (positiveButton != null) {
+            positiveButton.setEnabled(false); // Disable initially
+
+            editText.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                    // Not needed
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    // Not needed
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                    positiveButton.setEnabled(s.toString().trim().length() > 0);
+                }
+            });
+        }
     }
 
     @Override
@@ -53,5 +97,7 @@ public class GameOverFragment extends DialogFragment {
     public void onDetach() {
         super.onDetach();
         listener = null;
+        dialog = null; 
+        editText = null;
     }
 }

@@ -3,42 +3,33 @@ package card.andrew.dungeoncrawler.ui.home;
 import android.app.Application;
 
 import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel; // Changed from ViewModel to AndroidViewModel
+import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
+// MutableLiveData might still be needed if you intend to allow the ViewModel to directly change these values later,
+// but for read-only from repository, LiveData is sufficient for exposure.
+// For this refactor, we assume the primary source is the repository.
+// import androidx.lifecycle.MutableLiveData; 
 
 import card.andrew.dungeoncrawler.data.LeaderboardRepository;
 
-public class HomeViewModel extends AndroidViewModel { // Changed here
+public class HomeViewModel extends AndroidViewModel {
 
-    private final MutableLiveData<Integer> mHighestScore;
-    private final MutableLiveData<Integer> mRecentScore;
-    private final LeaderboardRepository mRepository;
+    private final LiveData<Integer> mHighestScore;
+    private final LiveData<Integer> mRecentScore;
 
     public HomeViewModel(@NonNull Application application) {
-        super(application); // Added super call
-        mHighestScore = new MutableLiveData<>();
-        mRecentScore = new MutableLiveData<>();
-        mRepository = LeaderboardRepository.getInstance(application.getApplicationContext());
-        mRepository.getHighestScore().observeForever(mHighestScore::setValue);
-        mRepository.getRecentScore().observeForever(mRecentScore::setValue);
+        super(application);
+        LeaderboardRepository repository = LeaderboardRepository.getInstance(application.getApplicationContext());
+
+        mHighestScore = repository.getHighestScore(); 
+        mRecentScore = repository.getRecentScore();
     }
 
-    public MutableLiveData<Integer> getHighestScore() {
-        if (mHighestScore.getValue() != null) {
-            return mHighestScore;
-        }
-        MutableLiveData<Integer> none = new MutableLiveData<>();
-        none.setValue(0);
-        return none;
+    public LiveData<Integer> getHighestScore() {
+        return mHighestScore;
     }
 
-    public MutableLiveData<Integer> getRecentScore() {
-        if (mRecentScore.getValue() != null) {
-            return mRecentScore;
-        }
-        MutableLiveData<Integer> none = new MutableLiveData<>();
-        none.setValue(0);
-        return none;
+    public LiveData<Integer> getRecentScore() {
+        return mRecentScore;
     }
 }
