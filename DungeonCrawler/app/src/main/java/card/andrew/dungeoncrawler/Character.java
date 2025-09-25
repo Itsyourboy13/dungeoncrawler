@@ -19,8 +19,8 @@ public class Character {
         this.x = random.nextInt(dungeonWidth);
         this.y = random.nextInt(dungeonHeight);
         // Initialize paint (blue for Character, subclasses can override)
-        characterPaint = new Paint();
-        characterPaint.setColor(0xFF0000FF); // Blue (ARGB)
+        characterPaint = new Paint(); // Comment out for testing
+        characterPaint.setColor(0xFF0000FF); // Comment out for testing
     }
 
     public void draw(Canvas canvas) {

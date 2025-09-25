@@ -6,21 +6,21 @@ import java.util.Random;
 
 public class Player extends Character {
     private int xpNeeded, potions;
-    private static int level = 1;
     private static final Random random = new Random(); // Consistent with Character
 
     public Player(int dungeonWidth, int dungeonHeight) {
-        super(dungeonWidth, dungeonHeight, level);
+        super(dungeonWidth, dungeonHeight, 1);
+        statCalculations();
         this.xp = 0;
-        this.potions = 3;
+        this.potions = 4;
         // Override paint to ensure blue color (optional, as Character already sets blue)
-        characterPaint.setColor(0xFF0000FF); // Blue
+        characterPaint.setColor(0xFF0000FF); // Comment out for testing
     }
 
     @Override
     protected void statCalculations() {
-        this.health = level * (25 - (level - 1) * 5);
-        this.maxHealth = level * (25 - (level - 1) * 5);
+        this.health = level * 25;
+        this.maxHealth = level * 25;
         this.minAttack = level * 2;
         this.maxAttack = level * 4;
         this.xpNeeded = (int) Math.pow(2, level - 1) * 25;

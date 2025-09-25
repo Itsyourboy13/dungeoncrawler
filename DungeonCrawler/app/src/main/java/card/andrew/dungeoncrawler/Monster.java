@@ -20,7 +20,7 @@ public class Monster extends Character {
         this.target = target;
         this.dungeon = dungeon;
         // Set red color for monster
-        characterPaint.setColor(0xFFFF0000); // Red
+        characterPaint.setColor(0xFFFF0000); // Comment out for testing
         // Generate random starting coordinates
         do {
             this.x = random.nextInt(dungeonWidth);
