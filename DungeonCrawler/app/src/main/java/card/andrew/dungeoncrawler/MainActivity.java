@@ -49,7 +49,8 @@ public class MainActivity extends AppCompatActivity
                             boolean enemyDefeated = data.getBooleanExtra("enemyDefeated", false);
                             gameView.onBattleResult(enemyDefeated);
                             updateProgressBars();
-                            Toast.makeText(this, enemyDefeated ? "Enemy defeated!" : "Battle ended", Toast.LENGTH_SHORT).show();
+                            int monstersLeft = gameView.getMonstersLeft();
+                            Toast.makeText(this, enemyDefeated ? "Enemy defeated! " + monstersLeft + " monsters left" : "Battle ended", Toast.LENGTH_SHORT).show();
                         }
                     } else if (result.getResultCode() == RESULT_CANCELED) {
                         gameView.onBattleResult(false);

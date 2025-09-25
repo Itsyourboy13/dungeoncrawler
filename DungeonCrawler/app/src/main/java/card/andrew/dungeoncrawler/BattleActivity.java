@@ -71,7 +71,7 @@ public class BattleActivity extends AppCompatActivity {
         potionButton = findViewById(R.id.potions_button);
         fleeButton = findViewById(R.id.flee_button);
 
-        String potionCountString = "Use potions: (" + player.getPotions() + ")";
+        String potionCountString = getResources().getString(R.string.potions) + ": (" + player.getPotions() + ")";
         potionButton.setText(potionCountString);
 
         attackButton.setOnClickListener(this::onAttack);
@@ -128,7 +128,7 @@ public class BattleActivity extends AppCompatActivity {
             String healAmountText = "HP: +" + healAmount;
             healedAmountText.setText(healAmountText);
             healedAmountText.setVisibility(View.VISIBLE);
-            String potionCountString = "Use potions: (" + player.getPotions() + ")";
+            String potionCountString = getResources().getString(R.string.potions) + ": (" + player.getPotions() + ")";
             potionButton.setText(potionCountString);
             flashGreen(playerCircle);
             updateHealthDisplay();

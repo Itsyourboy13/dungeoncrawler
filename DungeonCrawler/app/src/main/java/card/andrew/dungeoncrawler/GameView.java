@@ -317,6 +317,10 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
         return MONSTER_AMOUNT - monsters.size();
     }
 
+    public int getMonstersLeft() {
+        return monsters.size();
+    }
+
     private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
         @Override
         public boolean onScale(ScaleGestureDetector detector) {
