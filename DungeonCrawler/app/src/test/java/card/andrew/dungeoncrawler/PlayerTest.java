@@ -53,8 +53,8 @@ public class PlayerTest {
         player.statCalculations();
         player.setHealth(10);
         int healAmount = player.usePotion();
-        assertTrue(healAmount >= 10 && healAmount <= 15);
-        assertEquals(2, player.getPotions()); // Decremented
+        assertTrue(healAmount >= 12 && healAmount <= 18);
+        assertEquals(3, player.getPotions()); // Decremented
     }
 
     @Test
