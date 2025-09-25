@@ -7,8 +7,13 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.view.GestureDetector;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+
+import androidx.annotation.NonNull;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,10 +31,16 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
     private int currentLevel = 1;
     private boolean playerMoved = false; // Track player movement
     private GestureDetector gestureDetector;
+    private ScaleGestureDetector scaleDetector;
 
     // Camera for centering and scrolling
     private float cameraX = 0, cameraY = 0;
-    private float tileSize = 1.0f;
+    private float baseTileSize = 1.0f;
+    private float scaleFactor = 1.0f;
+
+    // Zoom constraints
+    private static final float MIN_ZOOM = 1.0f; // Minimum zoom level
+    private static final float MAX_ZOOM = 3.0f; // Maximum zoom level
 
     // Paints
     private final Paint lightGrayPaint = new Paint();
@@ -77,6 +88,9 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
         dungeon = new Dungeon(15, 15);
         player = new Player(dungeon.getWidth(), dungeon.getHeight());
         initializeMonsters();
+
+        gestureDetector = new GestureDetector(context, new GestureListener());
+        scaleDetector = new ScaleGestureDetector(context, new ScaleListener());
     }
 
     private void initializeMonsters() {
@@ -145,15 +159,15 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
     }
 
     @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+    public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) {
         screenWidth = width;
         screenHeight = height;
-        tileSize = Math.min(screenWidth / 7, screenHeight / 7); // Show ~7x7 tiles centered (adjust for zoom level)
+        baseTileSize = Math.min(screenWidth / (dungeon.getWidth() * 1.5f), screenHeight / (dungeon.getHeight() * 1.5f));
         updateCamera(); // Center player initially
     }
 
     @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
+    public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
         running = false;
         try {
             gameThread.join();
@@ -179,7 +193,7 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
                 }
             }
             try {
-                Thread.sleep(20); // ~50 FPS
+                Thread.sleep(20);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -232,9 +246,10 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
 
         canvas.save();
         // Apply camera translation and scale
-        canvas.translate(screenWidth / 2 - (player.getX() + 0.5f) * tileSize - cameraX,
-                screenHeight / 2 - (player.getY() + 0.5f) * tileSize - cameraY);
-        canvas.scale(tileSize, tileSize); // Apply tile size (for zoom later)
+        float currentTileSize = baseTileSize * scaleFactor;
+        canvas.translate(screenWidth / 2 - (player.getX() + 0.5f) * currentTileSize - cameraX,
+                screenHeight / 2 - (player.getY() + 0.5f) * currentTileSize - cameraY);
+        canvas.scale(currentTileSize, currentTileSize); // Apply tile size (for zoom later)
 
         dungeon.draw(canvas, lightGrayPaint, darkGrayPaint, blackPaint);
         player.draw(canvas);
@@ -298,7 +313,44 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
         return currentLevel;
     }
 
-    public int getMontersKilled() {
+    public int getMonstersKilled() {
         return MONSTER_AMOUNT - monsters.size();
+    }
+
+    private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
+        @Override
+        public boolean onScale(ScaleGestureDetector detector) {
+            // Adjust tileSize based on scale factor
+            float scaleFactor = detector.getScaleFactor();
+            // Adjust tileSize based on scale factor
+            float newTileSize = GameView.this.scaleFactor * scaleFactor;
+            GameView.this.scaleFactor = Math.max(MIN_ZOOM, Math.min(newTileSize, MAX_ZOOM)); // Clamp within bounds
+            return true;
+        }
+    }
+
+    private class GestureListener extends GestureDetector.SimpleOnGestureListener {
+        private float lastX, lastY;
+
+        @Override
+        public boolean onDown(MotionEvent e) {
+            lastX = e.getX();
+            lastY = e.getY();
+            return true;
+        }
+
+        @Override
+        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+            cameraX += distanceX;
+            cameraY += distanceY;
+            return true;
+        }
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        scaleDetector.onTouchEvent(event);
+        gestureDetector.onTouchEvent(event);
+        return true;
     }
 }

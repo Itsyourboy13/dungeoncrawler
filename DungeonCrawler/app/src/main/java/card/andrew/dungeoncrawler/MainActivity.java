@@ -115,7 +115,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onLeaderboardEntryEntered(String name) {
-        LeaderboardEntry entry = new LeaderboardEntry(name, gameView.getCurrentLevel(), gameView.getMontersKilled(), true);
+        LeaderboardEntry entry = new LeaderboardEntry(name, gameView.getCurrentLevel(), gameView.getMonstersKilled(), true);
         mRepository.insertEntry(entry);
         Intent intent = new Intent(this, HomeActivity.class);
         startActivity(intent);
