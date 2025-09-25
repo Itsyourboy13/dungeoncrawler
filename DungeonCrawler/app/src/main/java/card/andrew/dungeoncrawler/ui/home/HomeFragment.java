@@ -34,10 +34,16 @@ public class HomeFragment extends Fragment {
 
         // Observe score data from ViewModel
         homeViewModel.getHighestScore().observe(getViewLifecycleOwner(), highScore -> {
+            if (highScore == null) {
+                highScore = 0;
+            }
             String highScoreMessage = "Highest Score: " + highScore;
             highestScoreText.setText(highScoreMessage);
         });
         homeViewModel.getRecentScore().observe(getViewLifecycleOwner(), recentScore -> {
+            if (recentScore == null) {
+                recentScore = 0;
+            }
             String recentScoreMessage = "Recent Score: " + recentScore;
             recentScoreText.setText(recentScoreMessage);
         });

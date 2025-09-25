@@ -221,4 +221,12 @@ public class Dungeon {
         return rooms[x][y];
     }
 
+    public void revealAllRooms() {
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                rooms[x][y].seen = true;
+                rooms[x][y].discovered = true;
+            }
+        }
+    }
 }

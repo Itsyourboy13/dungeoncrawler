@@ -6,6 +6,10 @@
     android:layout_height="match_parent"
     tools:context=".ui.home.HomeFragment">
 
+    <card.andrew.dungeoncrawler.DungeonView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
     <Button
     android:id="@+id/start_button"
     android:layout_width="wrap_content"
@@ -24,6 +28,7 @@
         app:layout_constraintTop_toBottomOf="@id/start_button"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        android:textColor="@color/white"
         android:layout_marginTop="16dp" />
 
     <TextView
@@ -34,6 +39,7 @@
         app:layout_constraintTop_toBottomOf="@id/highest_score_text"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        android:textColor="@color/white"
         android:layout_marginTop="16dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
