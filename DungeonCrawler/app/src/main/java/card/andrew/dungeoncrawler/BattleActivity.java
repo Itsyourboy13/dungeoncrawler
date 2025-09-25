@@ -163,8 +163,13 @@ public class BattleActivity extends AppCompatActivity {
 
     private void checkBattleEnd() {
         if (monster.getHealth() <= 0) {
+            int currentLevel = player.getLevel();
             int gainedXp = monster.getXp();
             player.addXP(gainedXp);
+            if (player.getLevel() > currentLevel) {
+                String toastText = getResources().getString(R.string.level_up) + " (" + player.getPotions() + ")";
+                Toast.makeText(this, toastText, Toast.LENGTH_LONG).show();
+            }
             Intent resultIntent = new Intent();
             resultIntent.putExtra("enemyDefeated", true);
             setResult(RESULT_OK, resultIntent);

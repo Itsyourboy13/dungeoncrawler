@@ -43,4 +43,5 @@
     <string name="leaderboard_title_name">Your Top Scores</string>
     <string name="game_over">You Have Died, Game Over!</string>
     <string name="submit_score">Submit Your Score</string>
+    <string name="level_up">You Leveled UP! +1 Health Potions you now have:</string>
 </resources>
