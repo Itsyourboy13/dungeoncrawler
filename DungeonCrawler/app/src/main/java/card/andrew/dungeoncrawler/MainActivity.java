@@ -65,6 +65,10 @@ public class MainActivity extends AppCompatActivity
                 }
         );
 
+        if (savedInstanceState != null) {
+            gameView.restoreState(savedInstanceState.getBundle("gameState"));
+        }
+
         // Initial update of progress bars
         gameView.post(this::updateProgressBars);
 
@@ -78,6 +82,14 @@ public class MainActivity extends AppCompatActivity
         buttonDown.setOnClickListener(v -> gameView.movePlayer(0, 1)); // SOUTH
         buttonLeft.setOnClickListener(v -> gameView.movePlayer(-1, 0)); // WEST
         buttonRight.setOnClickListener(v -> gameView.movePlayer(1, 0));
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        Bundle gameState = new Bundle();
+        gameView.saveState(gameState);
+        outState.putBundle("gameState", gameState);
     }
 
     public void updateProgressBars() {

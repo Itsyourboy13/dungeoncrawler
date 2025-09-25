@@ -2,6 +2,7 @@ package card.andrew.dungeoncrawler;
 
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.os.Bundle;
 
 import edu.princeton.cs.algs4.Graph;
 import edu.princeton.cs.algs4.StdRandom;
@@ -226,6 +227,29 @@ public class Dungeon {
             for (int y = 0; y < height; y++) {
                 rooms[x][y].seen = true;
                 rooms[x][y].discovered = true;
+            }
+        }
+    }
+
+    public void saveState(Bundle outState) {
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                Bundle roomBundle = new Bundle();
+                rooms[x][y].saveState(roomBundle);
+                outState.putBundle("room_" + x + "_" + y, roomBundle);
+            }
+        }
+    }
+
+    public void restoreState(Bundle savedState) {
+        if (savedState != null) {
+            for (int x = 0; x < width; x++) {
+                for (int y = 0; y < height; y++) {
+                    Bundle roomBundle = savedState.getBundle("room_" + x + "_" + y);
+                    if (roomBundle != null) {
+                        rooms[x][y].restoreState(roomBundle);
+                    }
+                }
             }
         }
     }

@@ -1,5 +1,7 @@
 package card.andrew.dungeoncrawler;
 
+import android.os.Bundle;
+
 import java.util.Random;
 
 public class Player extends Character {
@@ -56,5 +58,33 @@ public class Player extends Character {
             healAmount = 0;
         }
         return healAmount;
+    }
+
+    public void saveState(Bundle outState) {
+        outState.putInt("x", x);
+        outState.putInt("y", y);
+        outState.putInt("health", health);
+        outState.putInt("maxHealth", maxHealth);
+        outState.putInt("minAttack", minAttack);
+        outState.putInt("maxAttack", maxAttack);
+        outState.putInt("level", level);
+        outState.putInt("xp", xp);
+        outState.putInt("xpNeeded", xpNeeded);
+        outState.putInt("potions", potions);
+    }
+
+    public void restoreState(Bundle savedState) {
+        if (savedState != null) {
+            x = savedState.getInt("x");
+            y = savedState.getInt("y");
+            health = savedState.getInt("health");
+            maxHealth = savedState.getInt("maxHealth");
+            minAttack = savedState.getInt("minAttack");
+            maxAttack = savedState.getInt("maxAttack");
+            level = savedState.getInt("level");
+            xp = savedState.getInt("xp");
+            xpNeeded = savedState.getInt("xpNeeded");
+            potions = savedState.getInt("potions");
+        }
     }
 }

@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.os.Bundle;
 import android.util.AttributeSet;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -93,6 +94,91 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
         scaleDetector = new ScaleGestureDetector(context, new ScaleListener());
     }
 
+    public void saveState(Bundle outState) {
+        outState.putInt("currentLevel", currentLevel);
+        outState.putBoolean("levelFinished", levelFinished);
+        outState.putBoolean("battleInProgress", battleInProgress);
+        outState.putFloat("cameraX", cameraX);
+        outState.putFloat("cameraY", cameraY);
+        outState.putFloat("baseTileSize", baseTileSize);
+        outState.putFloat("scaleFactor", scaleFactor);
+
+        // Save player state
+        if (player != null) {
+            Bundle playerBundle = new Bundle();
+            player.saveState(playerBundle);
+            outState.putBundle("player", playerBundle);
+        }
+
+        // Save dungeon state
+        if (dungeon != null) {
+            Bundle dungeonBundle = new Bundle();
+            dungeon.saveState(dungeonBundle);
+            outState.putBundle("dungeon", dungeonBundle);
+        }
+
+        // Save monsters state
+        if (!monsters.isEmpty()) {
+            Bundle monstersBundle = new Bundle();
+            for (int i = 0; i < monsters.size(); i++) {
+                Bundle monsterBundle = new Bundle();
+                monsters.get(i).saveState(monsterBundle);
+                monstersBundle.putBundle("monster" + i, monsterBundle);
+            }
+            outState.putBundle("monsters", monstersBundle);
+        }
+    }
+
+    public void restoreState(Bundle savedState) {
+        if (savedState == null) return;
+
+        currentLevel = savedState.getInt("currentLevel", 1);
+        levelFinished = savedState.getBoolean("levelFinished", false);
+        battleInProgress = savedState.getBoolean("battleInProgress", false);
+        cameraX = savedState.getFloat("cameraX", 0);
+        cameraY = savedState.getFloat("cameraY", 0);
+        baseTileSize = savedState.getFloat("baseTileSize", 1.0f);
+        scaleFactor = savedState.getFloat("scaleFactor", 1.0f);
+
+        // Restore player
+        Bundle playerBundle = savedState.getBundle("player");
+        if (playerBundle != null && player != null) {
+            player.restoreState(playerBundle);
+        }
+
+        // Restore dungeon
+        Bundle dungeonBundle = savedState.getBundle("dungeon");
+        if (dungeonBundle != null && dungeon != null) {
+            dungeon.restoreState(dungeonBundle);
+        }
+
+        // Restore monsters
+        Bundle monstersBundle = savedState.getBundle("monsters");
+        if (monstersBundle != null) {
+            monsters.clear();
+            for (int i = 0; i < MONSTER_AMOUNT; i++) {
+                Bundle monsterBundle = monstersBundle.getBundle("monster" + i);
+                if (monsterBundle != null) {
+                    Monster monster = new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, currentLevel);
+                    monster.restoreState(monsterBundle);
+                    monsters.add(monster);
+                }
+            }
+        }
+    }
+
+    private void initializeGame() {
+        if (dungeon == null) {
+            dungeon = new Dungeon(15, 15);
+        }
+        if (player == null) {
+            player = new Player(dungeon.getWidth(), dungeon.getHeight());
+        }
+        if (monsters.isEmpty()) {
+            initializeMonsters();
+        }
+    }
+
     private void initializeMonsters() {
         monsters.clear();
         if (currentLevel == 1) {
@@ -154,6 +240,7 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         running = true;
+        initializeGame();
         gameThread = new Thread(this);
         gameThread.start();
     }

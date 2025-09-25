@@ -2,6 +2,7 @@ package card.andrew.dungeoncrawler;
 
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.os.Bundle;
 
 
 /**
@@ -55,6 +56,27 @@ public class Room {
             }
         } else if (discovered) {
             canvas.drawRect(x, y, x + 1, y + 1, darkGrayPaint);
+        }
+    }
+
+    public void saveState(Bundle outState) {
+        outState.putInt("x", x);
+        outState.putInt("y", y);
+        outState.putBoolean("seen", seen);
+        outState.putBoolean("visited", visited);
+        outState.putBooleanArray("walls", walls);
+        outState.putBoolean("discovered", discovered);
+    }
+
+    public void restoreState(Bundle savedState) {
+        if (savedState != null) {
+            x = savedState.getInt("x");
+            y = savedState.getInt("y");
+            seen = savedState.getBoolean("seen");
+            visited = savedState.getBoolean("visited");
+            walls = savedState.getBooleanArray("walls");
+            if (walls == null) walls = new boolean[]{true, true, true, true}; // Default if null
+            discovered = savedState.getBoolean("discovered");
         }
     }
 }

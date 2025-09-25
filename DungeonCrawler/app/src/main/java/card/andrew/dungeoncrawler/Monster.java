@@ -1,6 +1,7 @@
 package card.andrew.dungeoncrawler;
 
 import android.graphics.Canvas;
+import android.os.Bundle;
 
 import java.util.Iterator;
 import java.util.Random;
@@ -80,5 +81,29 @@ public class Monster extends Character {
             }
         }
         moveCounter++;
+    }
+
+    public void saveState(Bundle outState) {
+        outState.putInt("x", x);
+        outState.putInt("y", y);
+        outState.putInt("health", health);
+        outState.putInt("maxHealth", maxHealth);
+        outState.putInt("minAttack", minAttack);
+        outState.putInt("maxAttack", maxAttack);
+        outState.putInt("level", level);
+        outState.putInt("moveCounter", moveCounter);
+    }
+
+    public void restoreState(Bundle savedState) {
+        if (savedState != null) {
+            x = savedState.getInt("x");
+            y = savedState.getInt("y");
+            health = savedState.getInt("health");
+            maxHealth = savedState.getInt("maxHealth");
+            minAttack = savedState.getInt("minAttack");
+            maxAttack = savedState.getInt("maxAttack");
+            level = savedState.getInt("level");
+            moveCounter = savedState.getInt("moveCounter");
+        }
     }
 }
