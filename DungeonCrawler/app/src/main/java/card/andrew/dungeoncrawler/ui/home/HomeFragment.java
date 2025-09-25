@@ -11,8 +11,11 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.NavController;
+import androidx.navigation.fragment.NavHostFragment;
 
 import card.andrew.dungeoncrawler.MainActivity;
+import card.andrew.dungeoncrawler.R;
 import card.andrew.dungeoncrawler.databinding.FragmentHomeBinding;
 
 public class HomeFragment extends Fragment {
@@ -36,6 +39,8 @@ public class HomeFragment extends Fragment {
         homeViewModel.getHighestScore().observe(getViewLifecycleOwner(), highScore -> {
             if (highScore == null) {
                 highScore = 0;
+                TextView newHereTextView = binding.newHereTextView;
+                newHereTextView.setVisibility(View.VISIBLE);
             }
             String highScoreMessage = "Highest Score: " + highScore;
             highestScoreText.setText(highScoreMessage);

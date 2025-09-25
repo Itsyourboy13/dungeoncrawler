@@ -16,4 +16,11 @@
         android:name="card.andrew.dungeoncrawler.ui.leaderboard.LeaderboardFragment"
         android:label="@string/title_leaderboard"
         tools:layout="@layout/fragment_leaderboard" />
+
+    <fragment
+        android:id="@+id/navigation_help"
+        android:name="card.andrew.dungeoncrawler.ui.help.HelpFragment"
+        android:label="@string/help"
+        tools:layout="@layout/fragment_help" />
+
 </navigation>

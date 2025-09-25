@@ -19,8 +19,8 @@ public class Player extends Character {
 
     @Override
     protected void statCalculations() {
-        this.health = level * 20;
-        this.maxHealth = level * 20;
+        this.health = level * (25 - (level - 1) * 5);
+        this.maxHealth = level * (25 - (level - 1) * 5);
         this.minAttack = level * 2;
         this.maxAttack = level * 4;
         this.xpNeeded = (int) Math.pow(2, level - 1) * 25;

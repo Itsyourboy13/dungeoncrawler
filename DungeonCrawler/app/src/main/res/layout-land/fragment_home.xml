@@ -42,4 +42,19 @@
         android:textColor="@color/white"
         android:layout_marginTop="16dp" />
 
+    <TextView
+        android:id="@+id/new_here_text_view"
+        android:layout_width="105dp"
+        android:layout_height="wrap_content"
+        android:text="@string/new_here"
+        android:textColor="@color/black"
+        android:background="@color/white"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:textSize="18sp"
+        android:padding="5dp"
+        android:layout_marginStart="43dp"
+        android:visibility="gone"/>
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>
