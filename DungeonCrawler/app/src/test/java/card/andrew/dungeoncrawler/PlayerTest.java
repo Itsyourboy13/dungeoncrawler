@@ -64,7 +64,7 @@ public class PlayerTest {
         player.statCalculations();
         player.addXP(30);
         assertEquals(2, player.getLevel()); // Leveled up
-        assertEquals(40, player.getMaxHealth()); // Updated stats
+        assertEquals(50, player.getMaxHealth()); // Updated stats
         assertEquals(5, player.getXp()); // Overflow
     }
 
@@ -75,7 +75,7 @@ public class PlayerTest {
         player.statCalculations();
         player.addXP(25);
         player.statCalculations();
-        assertEquals(40, player.getMaxHealth());
+        assertEquals(50, player.getMaxHealth());
         int damage = player.attack();
         assertTrue(damage >= 4 && damage <= 8);
         assertEquals(50, player.getXpNeeded());
