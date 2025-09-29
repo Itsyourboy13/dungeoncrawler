@@ -25,8 +25,14 @@ jobs:
       - name: Build APK
         run: ./gradlew assembleDebug
 
-      - name: Deploy APK to GitHub Pages
+      - name: Prepare deployment files
+        run: |
+          mkdir deploy
+          cp index.html deploy/
+          cp app/build/outputs/apk/debug/app-debug.apk deploy/
+
+      - name: Deploy APK and Index to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .
+          publish_dir: deploy/
