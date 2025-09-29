@@ -1,24 +1,26 @@
 package card.andrew.dungeoncrawler;
 
+import android.os.Bundle;
+
 import java.util.Random;
 
 public class Player extends Character {
     private int xpNeeded, potions;
-    private int xp = 0;
-    private static int level = 1;
     private static final Random random = new Random(); // Consistent with Character
 
     public Player(int dungeonWidth, int dungeonHeight) {
-        super(dungeonWidth, dungeonHeight, level);
-        this.potions = 3;
+        super(dungeonWidth, dungeonHeight, 1);
+        statCalculations();
+        this.xp = 0;
+        this.potions = 4;
         // Override paint to ensure blue color (optional, as Character already sets blue)
-        characterPaint.setColor(0xFF0000FF); // Blue
+        characterPaint.setColor(0xFF0000FF); // Comment out for testing
     }
 
     @Override
     protected void statCalculations() {
-        this.health = level * 20;
-        this.maxHealth = level * 20;
+        this.health = level * 25;
+        this.maxHealth = level * 25;
         this.minAttack = level * 2;
         this.maxAttack = level * 4;
         this.xpNeeded = (int) Math.pow(2, level - 1) * 25;
@@ -28,13 +30,10 @@ public class Player extends Character {
         return xpNeeded;
     }
 
-    public int getXp() {
-        return xp;
-    }
-
     public void addXP(int xp) {
         this.xp += xp;
         if (this.xp >= xpNeeded) {
+            this.xp -= xpNeeded;
             levelUp();
         }
     }
@@ -59,5 +58,33 @@ public class Player extends Character {
             healAmount = 0;
         }
         return healAmount;
+    }
+
+    public void saveState(Bundle outState) {
+        outState.putInt("x", x);
+        outState.putInt("y", y);
+        outState.putInt("health", health);
+        outState.putInt("maxHealth", maxHealth);
+        outState.putInt("minAttack", minAttack);
+        outState.putInt("maxAttack", maxAttack);
+        outState.putInt("level", level);
+        outState.putInt("xp", xp);
+        outState.putInt("xpNeeded", xpNeeded);
+        outState.putInt("potions", potions);
+    }
+
+    public void restoreState(Bundle savedState) {
+        if (savedState != null) {
+            x = savedState.getInt("x");
+            y = savedState.getInt("y");
+            health = savedState.getInt("health");
+            maxHealth = savedState.getInt("maxHealth");
+            minAttack = savedState.getInt("minAttack");
+            maxAttack = savedState.getInt("maxAttack");
+            level = savedState.getInt("level");
+            xp = savedState.getInt("xp");
+            xpNeeded = savedState.getInt("xpNeeded");
+            potions = savedState.getInt("potions");
+        }
     }
 }

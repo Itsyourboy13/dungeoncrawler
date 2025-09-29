@@ -1,6 +1,7 @@
 package card.andrew.dungeoncrawler;
 
 import android.graphics.Canvas;
+import android.os.Bundle;
 
 import java.util.Iterator;
 import java.util.Random;
@@ -19,7 +20,7 @@ public class Monster extends Character {
         this.target = target;
         this.dungeon = dungeon;
         // Set red color for monster
-        characterPaint.setColor(0xFFFF0000); // Red
+        characterPaint.setColor(0xFFFF0000); // Comment out for testing
         // Generate random starting coordinates
         do {
             this.x = random.nextInt(dungeonWidth);
@@ -57,7 +58,7 @@ public class Monster extends Character {
      *
      */
     public void move() {
-        if (moveCounter % 5 == 0) {
+        if (moveCounter % 2 == 0) {
             Graph roomGraph = dungeon.getRoomGraph();
             int playerIndex = target.getY() * dungeon.getWidth() + target.getX();
             int monsterIndex = y * dungeon.getWidth() + x;
@@ -65,10 +66,10 @@ public class Monster extends Character {
             if (bfs.hasPathTo(playerIndex)) {
                 Iterable<Integer> path = bfs.pathTo(playerIndex);
                 int distance = 0;
-                for (int node : path) {
+                for (int ignored : path) {
                     distance++;
                 }
-                if (distance <= 10) {
+                if (distance <= 10 || (moveCounter % 8 == 0 && distance >= 15)) {
                     Iterator<Integer> iterator = path.iterator();
                     iterator.next(); // Skip current room
                     if (iterator.hasNext()) {
@@ -82,8 +83,27 @@ public class Monster extends Character {
         moveCounter++;
     }
 
-    public void startBattle() {
-        // Simply set battle flag; GameView handles rendering and input
-        GameView.setBattleInProgress(true);
+    public void saveState(Bundle outState) {
+        outState.putInt("x", x);
+        outState.putInt("y", y);
+        outState.putInt("health", health);
+        outState.putInt("maxHealth", maxHealth);
+        outState.putInt("minAttack", minAttack);
+        outState.putInt("maxAttack", maxAttack);
+        outState.putInt("level", level);
+        outState.putInt("moveCounter", moveCounter);
+    }
+
+    public void restoreState(Bundle savedState) {
+        if (savedState != null) {
+            x = savedState.getInt("x");
+            y = savedState.getInt("y");
+            health = savedState.getInt("health");
+            maxHealth = savedState.getInt("maxHealth");
+            minAttack = savedState.getInt("minAttack");
+            maxAttack = savedState.getInt("maxAttack");
+            level = savedState.getInt("level");
+            moveCounter = savedState.getInt("moveCounter");
+        }
     }
 }

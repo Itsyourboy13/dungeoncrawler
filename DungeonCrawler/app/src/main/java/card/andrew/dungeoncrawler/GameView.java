@@ -1,15 +1,20 @@
 package card.andrew.dungeoncrawler;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.RectF;
+import android.os.Bundle;
 import android.util.AttributeSet;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+
+import androidx.annotation.NonNull;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,26 +29,29 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
     private static boolean battleInProgress = false;
     private Monster engagingMonster = null;
     private boolean levelFinished = false;
-    private int timesPlayed = 1;
-    private Battle battle = null;
-    private String gameMessage = "";
-    private int messageCounter = 0;
+    private int currentLevel = 1;
     private boolean playerMoved = false; // Track player movement
     private GestureDetector gestureDetector;
+    private ScaleGestureDetector scaleDetector;
 
     // Camera for centering and scrolling
     private float cameraX = 0, cameraY = 0;
-    private float tileSize = 1.0f;
+    private float baseTileSize = 1.0f;
+    private float scaleFactor = 1.0f;
+
+    // Zoom constraints
+    private static final float MIN_ZOOM = 1.0f; // Minimum zoom level
+    private static final float MAX_ZOOM = 3.0f; // Maximum zoom level
 
     // Paints
-    private Paint lightGrayPaint = new Paint();
-    private Paint darkGrayPaint = new Paint();
-    private Paint blackPaint = new Paint();
-    private Paint greenPaint = new Paint();
-    private Paint yellowPaint = new Paint();
-    private Paint bluePaint = new Paint();
-    private Paint redPaint = new Paint();
-    private Paint textPaint = new Paint();
+    private final Paint lightGrayPaint = new Paint();
+    private final Paint darkGrayPaint = new Paint();
+    private final Paint blackPaint = new Paint();
+    private final Paint greenPaint = new Paint();
+    private final Paint yellowPaint = new Paint();
+    private final Paint bluePaint = new Paint();
+    private final Paint redPaint = new Paint();
+    private final Paint textPaint = new Paint();
 
     private float scaleX, scaleY;
     private float screenWidth, screenHeight;
@@ -81,11 +89,99 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
         dungeon = new Dungeon(15, 15);
         player = new Player(dungeon.getWidth(), dungeon.getHeight());
         initializeMonsters();
+
+        gestureDetector = new GestureDetector(context, new GestureListener());
+        scaleDetector = new ScaleGestureDetector(context, new ScaleListener());
+    }
+
+    public void saveState(Bundle outState) {
+        outState.putInt("currentLevel", currentLevel);
+        outState.putBoolean("levelFinished", levelFinished);
+        outState.putBoolean("battleInProgress", battleInProgress);
+        outState.putFloat("cameraX", cameraX);
+        outState.putFloat("cameraY", cameraY);
+        outState.putFloat("baseTileSize", baseTileSize);
+        outState.putFloat("scaleFactor", scaleFactor);
+
+        // Save player state
+        if (player != null) {
+            Bundle playerBundle = new Bundle();
+            player.saveState(playerBundle);
+            outState.putBundle("player", playerBundle);
+        }
+
+        // Save dungeon state
+        if (dungeon != null) {
+            Bundle dungeonBundle = new Bundle();
+            dungeon.saveState(dungeonBundle);
+            outState.putBundle("dungeon", dungeonBundle);
+        }
+
+        // Save monsters state
+        if (!monsters.isEmpty()) {
+            Bundle monstersBundle = new Bundle();
+            for (int i = 0; i < monsters.size(); i++) {
+                Bundle monsterBundle = new Bundle();
+                monsters.get(i).saveState(monsterBundle);
+                monstersBundle.putBundle("monster" + i, monsterBundle);
+            }
+            outState.putBundle("monsters", monstersBundle);
+        }
+    }
+
+    public void restoreState(Bundle savedState) {
+        if (savedState == null) return;
+
+        currentLevel = savedState.getInt("currentLevel", 1);
+        levelFinished = savedState.getBoolean("levelFinished", false);
+        battleInProgress = savedState.getBoolean("battleInProgress", false);
+        cameraX = savedState.getFloat("cameraX", 0);
+        cameraY = savedState.getFloat("cameraY", 0);
+        baseTileSize = savedState.getFloat("baseTileSize", 1.0f);
+        scaleFactor = savedState.getFloat("scaleFactor", 1.0f);
+
+        // Restore player
+        Bundle playerBundle = savedState.getBundle("player");
+        if (playerBundle != null && player != null) {
+            player.restoreState(playerBundle);
+        }
+
+        // Restore dungeon
+        Bundle dungeonBundle = savedState.getBundle("dungeon");
+        if (dungeonBundle != null && dungeon != null) {
+            dungeon.restoreState(dungeonBundle);
+        }
+
+        // Restore monsters
+        Bundle monstersBundle = savedState.getBundle("monsters");
+        if (monstersBundle != null) {
+            monsters.clear();
+            for (int i = 0; i < MONSTER_AMOUNT; i++) {
+                Bundle monsterBundle = monstersBundle.getBundle("monster" + i);
+                if (monsterBundle != null) {
+                    Monster monster = new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, currentLevel);
+                    monster.restoreState(monsterBundle);
+                    monsters.add(monster);
+                }
+            }
+        }
+    }
+
+    private void initializeGame() {
+        if (dungeon == null) {
+            dungeon = new Dungeon(15, 15);
+        }
+        if (player == null) {
+            player = new Player(dungeon.getWidth(), dungeon.getHeight());
+        }
+        if (monsters.isEmpty()) {
+            initializeMonsters();
+        }
     }
 
     private void initializeMonsters() {
         monsters.clear();
-        if (timesPlayed == 1) {
+        if (currentLevel == 1) {
             if (MONSTER_AMOUNT % 2 == 0) {
                 for (int i = 0; i < MONSTER_AMOUNT / 2; i++) {
                     monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, 1));
@@ -105,37 +201,37 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
         } else {
             if (MONSTER_AMOUNT % 3 == 0) {
                 for (int i = 0; i < MONSTER_AMOUNT / 3; i++) {
-                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, timesPlayed - 1));
+                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, currentLevel - 1));
                 }
                 for (int i = 0; i < MONSTER_AMOUNT / 3; i++) {
-                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, timesPlayed));
+                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, currentLevel));
                 }
                 for (int i = 0; i < MONSTER_AMOUNT / 3; i++) {
-                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, timesPlayed + 1));
+                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, currentLevel + 1));
                 }
             } else if (MONSTER_AMOUNT % 3 == 1) {
                 for (int i = 0; i < MONSTER_AMOUNT / 3; i++) {
-                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, timesPlayed - 1));
+                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, currentLevel - 1));
                 }
                 for (int i = 0; i < MONSTER_AMOUNT / 3; i++) {
-                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, timesPlayed));
+                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, currentLevel));
                 }
                 for (int i = 0; i < MONSTER_AMOUNT / 3; i++) {
-                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, timesPlayed + 1));
+                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, currentLevel + 1));
                 }
-                monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, timesPlayed + 1));
+                monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, currentLevel + 1));
             } else {
                 for (int i = 0; i < MONSTER_AMOUNT / 3; i++) {
-                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, timesPlayed - 1));
+                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, currentLevel - 1));
                 }
                 for (int i = 0; i < MONSTER_AMOUNT / 3; i++) {
-                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, timesPlayed));
+                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, currentLevel));
                 }
                 for (int i = 0; i < MONSTER_AMOUNT / 3; i++) {
-                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, timesPlayed + 1));
+                    monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, currentLevel + 1));
                 }
-                monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, timesPlayed));
-                monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, timesPlayed + 1));
+                monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, currentLevel));
+                monsters.add(new Monster(dungeon.getWidth(), dungeon.getHeight(), player, dungeon, currentLevel + 1));
             }
         }
         levelFinished = false;
@@ -144,20 +240,21 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         running = true;
+        initializeGame();
         gameThread = new Thread(this);
         gameThread.start();
     }
 
     @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+    public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) {
         screenWidth = width;
         screenHeight = height;
-        tileSize = Math.min(screenWidth / 7, screenHeight / 7); // Show ~7x7 tiles centered (adjust for zoom level)
+        baseTileSize = Math.min(screenWidth / (dungeon.getWidth() * 1.5f), screenHeight / (dungeon.getHeight() * 1.5f));
         updateCamera(); // Center player initially
     }
 
     @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
+    public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
         running = false;
         try {
             gameThread.join();
@@ -183,7 +280,7 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
                 }
             }
             try {
-                Thread.sleep(20); // ~50 FPS
+                Thread.sleep(20);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -191,23 +288,12 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
     }
 
     private void update() {
-        if (battleInProgress && battle != null) {
-            battle.update(); // Handle blink/message timers
-            if (!battle.isBlinking() && !GameView.isBattleInProgress()) {
-                battle = null;
-                // Check for game over
-                if (player.getHealth() <= 0) {
-                    gameMessage = "GAME OVER! YOU LOST!";
-                    messageCounter = 100; // ~2s
-                }
-            }
-        } else if (!levelFinished) {
+        if (!levelFinished) {
             dungeon.updateSeenRooms(player);
             monsters.removeIf(m -> m.getHealth() <= 0);
             if (monsters.isEmpty()) {
                 levelFinished = true;
-                gameMessage = "YOU WON!";
-                messageCounter = 100; // ~2s
+                showLevelFinishedDialog();
             }
             if (playerMoved) {
                 for (Monster monster : monsters) {
@@ -215,92 +301,56 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
                     if (monster.getX() == player.getX() && monster.getY() == player.getY() && !battleInProgress) {
                         battleInProgress = true;
                         engagingMonster = monster;
-                        battle = new Battle(player, monster, dungeon);
-                        monster.startBattle();
+                        GameState.getInstance().setCurrentMonster(monster);
+                        GameState.getInstance().setPlayer(player);
+                        startBattleActivity();
                     }
                 }
                 playerMoved = false; // Reset after movement
             }
-        } else if (messageCounter > 0) {
-            messageCounter--;
-            if (messageCounter == 0 && !gameMessage.equals("GAME OVER! YOU LOST!")) {
-                timesPlayed++;
-                dungeon = new Dungeon(15, 15);
-                initializeMonsters();
-                levelFinished = false;
-                gameMessage = "NEXT LEVEL STARTING...";
-                messageCounter = 50; // ~1s
-            }
+        } else {
+            currentLevel++;
+            dungeon = new Dungeon(15, 15);
+            initializeMonsters();
+            levelFinished = false;
         }
     }
 
-    public static void setBattleInProgress(boolean inProgress) {
-        battleInProgress = inProgress;
+    private void showLevelFinishedDialog() {
+        LevelFinishedFragment fragment = LevelFinishedFragment.
+                newInstance(currentLevel, player.getLevel());
+        fragment.show(((MainActivity) getContext()).getSupportFragmentManager(), "level_finished");
     }
 
-    public static boolean isBattleInProgress() {
-        return battleInProgress;
+    private void startBattleActivity() {
+        Intent intent = new Intent(getContext(), BattleActivity.class);
+        ((MainActivity) getContext()).startBattle(intent);
     }
 
     public void draw(Canvas canvas) {
         super.draw(canvas);
         canvas.drawColor(Color.BLACK);
 
-        if (battleInProgress && battle != null) {
-            battle.drawBattleScreen(canvas, bluePaint, redPaint, greenPaint, blackPaint, textPaint);
-        } else {
-            canvas.save();
-            // Apply camera translation and scale
-            canvas.translate(screenWidth / 2 - (player.getX() + 0.5f) * tileSize - cameraX,
-                    screenHeight / 2 - (player.getY() + 0.5f) * tileSize - cameraY);
-            canvas.scale(tileSize, tileSize); // Apply tile size (for zoom later)
+        canvas.save();
+        // Apply camera translation and scale
+        float currentTileSize = baseTileSize * scaleFactor;
+        canvas.translate(screenWidth / 2 - (player.getX() + 0.5f) * currentTileSize - cameraX,
+                screenHeight / 2 - (player.getY() + 0.5f) * currentTileSize - cameraY);
+        canvas.scale(currentTileSize, currentTileSize); // Apply tile size (for zoom later)
 
-            dungeon.draw(canvas, lightGrayPaint, darkGrayPaint, blackPaint);
-            player.draw(canvas);
-            for (Monster monster : monsters) {
-                monster.draw(canvas);
-            }
-
-            canvas.restore(); // Reset for UI elements
-
-            if (!gameMessage.isEmpty()) {
-                textPaint.setTextSize(60);
-                canvas.drawText(gameMessage, screenWidth / 2, screenHeight / 2, textPaint);
-                textPaint.setTextSize(30);
-            }
+        dungeon.draw(canvas, lightGrayPaint, darkGrayPaint, blackPaint);
+        player.draw(canvas);
+        for (Monster monster : monsters) {
+            monster.draw(canvas);
         }
 
-        if (!gameMessage.isEmpty()) {
-            textPaint.setTextSize(60);
-            canvas.drawText(gameMessage, screenWidth / 2f / scaleX, screenHeight / 2f / scaleY, textPaint);
-            textPaint.setTextSize(30);
-        }
+        canvas.restore(); // Reset for UI elements
     }
 
     private void updateCamera() {
         // Center player (adjust for zoom later)
         cameraX = 0; // Optional fine-tuning for offsets
         cameraY = 0;
-    }
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        if (battleInProgress && battle != null) {
-            // Handle battle taps (unchanged)
-            if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                float battleTouchX = event.getX() * 30f / screenWidth;
-                float battleTouchY = event.getY() * 30f / screenHeight;
-                if (battleTouchX >= 13 && battleTouchX <= 17 && battleTouchY >= 4.5 && battleTouchY <= 5.5) {
-                    battle.playerFlee();
-                } else if (battleTouchX >= 13 && battleTouchX <= 17 && battleTouchY >= 2.5 && battleTouchY <= 3.5) {
-                    battle.playerAttack();
-                } else if (battleTouchX >= 8 && battleTouchX <= 12 && battleTouchY >= 3.5 && battleTouchY <= 5.5) {
-                    battle.playerUsePotion();
-                }
-                return true;
-            }
-        }
-        return super.onTouchEvent(event); // No swipes/taps for movement; buttons handle it
     }
 
     // Called from MainActivity button listeners
@@ -321,6 +371,14 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
         gameThread.start();
     }
 
+    public void onBattleResult(boolean enemyDefeated) {
+        if (enemyDefeated) {
+            monsters.remove(engagingMonster);
+        }
+        battleInProgress = false;
+        engagingMonster = null;
+    }
+
     // Getters for progress bars
     public int getPlayerHealth() {
         return player.getHealth();
@@ -336,5 +394,54 @@ public class GameView extends SurfaceView implements Runnable, SurfaceHolder.Cal
 
     public int getPlayerXpNeeded() {
         return player.getXpNeeded();
+    }
+
+    public int getCurrentLevel() {
+        return currentLevel;
+    }
+
+    public int getMonstersKilled() {
+        return MONSTER_AMOUNT - monsters.size();
+    }
+
+    public int getMonstersLeft() {
+        return monsters.size();
+    }
+
+    private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
+        @Override
+        public boolean onScale(ScaleGestureDetector detector) {
+            // Adjust tileSize based on scale factor
+            float scaleFactor = detector.getScaleFactor();
+            // Adjust tileSize based on scale factor
+            float newTileSize = GameView.this.scaleFactor * scaleFactor;
+            GameView.this.scaleFactor = Math.max(MIN_ZOOM, Math.min(newTileSize, MAX_ZOOM)); // Clamp within bounds
+            return true;
+        }
+    }
+
+    private class GestureListener extends GestureDetector.SimpleOnGestureListener {
+        private float lastX, lastY;
+
+        @Override
+        public boolean onDown(MotionEvent e) {
+            lastX = e.getX();
+            lastY = e.getY();
+            return true;
+        }
+
+        @Override
+        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+            cameraX += distanceX;
+            cameraY += distanceY;
+            return true;
+        }
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        scaleDetector.onTouchEvent(event);
+        gestureDetector.onTouchEvent(event);
+        return true;
     }
 }

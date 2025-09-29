@@ -19,8 +19,8 @@ public class Character {
         this.x = random.nextInt(dungeonWidth);
         this.y = random.nextInt(dungeonHeight);
         // Initialize paint (blue for Character, subclasses can override)
-        characterPaint = new Paint();
-        characterPaint.setColor(0xFF0000FF); // Blue (ARGB)
+        characterPaint = new Paint(); // Comment out for testing
+        characterPaint.setColor(0xFF0000FF); // Comment out for testing
     }
 
     public void draw(Canvas canvas) {
@@ -69,6 +69,10 @@ public class Character {
         this.maxHealth = this.level * 10;
         this.minAttack = this.level * 2;
         this.maxAttack = this.level * 3;
-        this.xp = (int) Math.pow(2, this.level - 1) * 25;
+        this.xp = (int) Math.pow(2, this.level - 1) * 5;
+    }
+
+    public int getLevel() {
+        return level;
     }
 }
